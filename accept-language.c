@@ -23,7 +23,7 @@
 #define vcl_string char
 #define LANG_LIST_SIZE 16
 #define HDR_MAXLEN 256
-#define LANG_MAXLEN 8
+#define LANG_MAXLEN 15
 #define RETURN_LANG(x) { \
     strncpy(lang, x, LANG_MAXLEN); \
     return; \
@@ -32,8 +32,17 @@
 #define PUSH_LANG(x,y) { \
     /* fprintf(stderr, "Pushing lang [%d] %s %.4f\n", curr_lang, x, y); */ \
     /* We have to copy, otherwise root_lang will be the same every time */ \
-    strncpy(pl[curr_lang].lang, x, LANG_MAXLEN); \
-    pl[curr_lang].q = y;       \
+    int already_present; \
+    already_present = 0; \
+    for (i = 0; i < curr_lang; i++) { \
+        if(strcmp(pl[i].lang, x) == 0) {\
+            already_present = 1; \
+        } \
+    } \
+    if(already_present == 0) {\
+        strncpy(pl[curr_lang].lang, x, LANG_MAXLEN); \
+        pl[curr_lang].q = y;       \
+    } \
     curr_lang++;               \
 }
 
@@ -74,12 +83,10 @@ int is_supported(vcl_string *lang) {
 }
 
 /* Used by qsort() below */
-int sort_by_q(const void *x, const void *y) {
+int sort_by_lang(const void *x, const void *y) {
     struct lang_list *a = (struct lang_list *)x;
     struct lang_list *b = (struct lang_list *)y;
-    if (a->q > b->q) return -1;
-    if (a->q < b->q) return 1;
-    return 0;
+    return strcmp(a->lang, b->lang);
 }
 
 /* Reads Accept-Language, parses it, and finds the first match
@@ -95,6 +102,7 @@ void select_language(const vcl_string *incoming_header, char *lang) {
     vcl_string header_copy[HDR_MAXLEN];
     vcl_string *pos = NULL;
     vcl_string *q_spec = NULL;
+    vcl_string res_lang[LANG_MAXLEN];
     unsigned int curr_lang = 0, i = 0;
     float q;
 
@@ -144,15 +152,23 @@ void select_language(const vcl_string *incoming_header, char *lang) {
             break;
     }
 
-    /* Sort by priority */
-    qsort(pl, curr_lang, sizeof(struct lang_list), &sort_by_q);
+    /* Sort by language */
+    qsort(pl, curr_lang, sizeof(struct lang_list), &sort_by_lang);
 
     /* Match with supported languages */
+    strcpy (res_lang, "");
     for (i = 0; i < curr_lang; i++) {
-        if (is_supported(pl[i].lang))
-            RETURN_LANG(pl[i].lang);
+        if (is_supported(pl[i].lang)) {
+            strcat(res_lang, strcat(pl[i].lang, "_"));
+            if(strlen(res_lang) + 3 >= LANG_MAXLEN) {
+                break;
+            }
+        }
     }
-
+    if(strlen(res_lang) > 0) {
+        res_lang[(strlen(res_lang)-1)] = '\0'; /* Remove trailing underscore */
+        RETURN_LANG(res_lang);
+    }
     RETURN_DEFAULT_LANG;
 }
 

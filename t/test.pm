@@ -22,7 +22,7 @@ sub run_binary {
     $cmd .= ' ';
     $cmd .= join(' ', map { q(') . $_ . q(') } @args);
     my $output = `$cmd`;
-    return $output; 
+    return $output;
 }
 
 sub is_language {
@@ -31,6 +31,7 @@ sub is_language {
     chomp $selected_language;
 
     $message ||= qq(parsing header '$header_value' should hold language '$expected_language');
+    $message .= qq(, got '$selected_language');
 
     return is($selected_language, $expected_language, $message);
 }
