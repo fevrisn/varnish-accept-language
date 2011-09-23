@@ -159,14 +159,14 @@ void select_language(const vcl_string *incoming_header, char *lang) {
     strcpy (res_lang, "");
     for (i = 0; i < curr_lang; i++) {
         if (is_supported(pl[i].lang)) {
-            strcat(res_lang, strcat(pl[i].lang, "_"));
+            strcat(res_lang, strcat(pl[i].lang, ","));
             if(strlen(res_lang) + 3 >= LANG_MAXLEN) {
                 break;
             }
         }
     }
     if(strlen(res_lang) > 0) {
-        res_lang[(strlen(res_lang)-1)] = '\0'; /* Remove trailing underscore */
+        res_lang[(strlen(res_lang)-1)] = '\0'; /* Remove trailing comma */
         RETURN_LANG(res_lang);
     }
     RETURN_DEFAULT_LANG;
