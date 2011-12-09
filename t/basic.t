@@ -23,7 +23,7 @@ for (@langs) {
 
     test::is_lang($lang, $lang);
     test::is_lang("$lang,xy-zx;q=0.01", $_);
-    test::is_lang("$lang,en;q=0.99", join("_", sort($_,'en')));
+    test::is_lang("$lang,en;q=0.99", join(",", sort($_,'en')));
 }
 
 test::is_lang('xy', 'en');
